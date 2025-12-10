@@ -1,0 +1,5 @@
+{
+  "name": "BNS Legal AI Assistant",
+  "description": "A Retrieval Augmented Generation (RAG) system for the Bharatiya Nyaya Sanhita (BNS). Upload the legal text, index it locally using Gemini embeddings, and query it to find relevant legal sections for reported crimes.",
+  "requestFramePermissions": []
+}
