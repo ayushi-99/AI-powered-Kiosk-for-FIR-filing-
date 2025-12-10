@@ -3,8 +3,8 @@ import { ProcessingStatus } from './components/ProcessingStatus';
 import { LegalResults } from './components/LegalResults';
 import { parseAndChunkText } from './utils/textProcessor';
 import { vectorStore } from './services/vectorStore';
-import { generateEmbedding, generateRAGResponse } from './services/geminiService';
-import { DocumentChunk, SearchResult, AppState } from './types';
+import { generateEmbedding, analyzeComplaint } from './services/geminiService';
+import { DocumentChunk, SearchResult, AppState, LegalAnalysisResult } from './types';
 import { BNS_TEXT } from './services/bnsContent';
 
 const App: React.FC = () => {
@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [processedCount, setProcessedCount] = useState(0);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<LegalAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Automatically load and process the BNS text on mount
@@ -73,7 +73,7 @@ const App: React.FC = () => {
 
     setAppState(AppState.SEARCHING);
     setResults([]);
-    setAiResponse(null);
+    setAnalysis(null);
     setError(null);
 
     try {
@@ -84,10 +84,10 @@ const App: React.FC = () => {
       const searchResults = vectorStore.search(queryVector, 5); // Get top 5 matches
       setResults(searchResults);
 
-      // 3. Generate Answer using Context
+      // 3. Generate Analysis using Context
       const matchedChunks = searchResults.map(r => r.chunk);
-      const answer = await generateRAGResponse(query, matchedChunks);
-      setAiResponse(answer);
+      const analysisResult = await analyzeComplaint(query, matchedChunks);
+      setAnalysis(analysisResult);
 
       setAppState(AppState.READY);
     } catch (err) {
@@ -153,7 +153,7 @@ const App: React.FC = () => {
                 
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-extrabold text-slate-900 mb-3">File a Complaint</h2>
-                  <p className="text-lg text-slate-600">Describe the incident in plain English. The AI will identify the closest legal sections from the BNS.</p>
+                  <p className="text-lg text-slate-600">Describe the incident in plain English. The AI will classify it and identify the relevant BNS sections.</p>
                 </div>
 
                 {/* Complaint Box */}
@@ -187,11 +187,11 @@ const App: React.FC = () => {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                   </svg>
-                                  Analyzing...
+                                  Analysing...
                                 </>
                               ) : (
                                 <>
-                                  Find Legal Sections
+                                  Analyze Complaint
                                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                   </svg>
@@ -205,7 +205,7 @@ const App: React.FC = () => {
                 {/* Results Area */}
                 <LegalResults 
                     results={results} 
-                    aiResponse={aiResponse} 
+                    analysis={analysis} 
                     loading={appState === AppState.SEARCHING} 
                 />
             </div>

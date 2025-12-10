@@ -19,6 +19,14 @@ export interface SearchResult {
   similarity: number;
 }
 
+export interface LegalAnalysisResult {
+  classification: 'Cognizable Offense' | 'Non-Cognizable/Civil Dispute' | 'Ambiguous/Need More Info';
+  bns_section: string;
+  confidence_score: number;
+  reasoning: string;
+  missing_details: string;
+}
+
 export interface RAGResponse {
   answer: string;
   sources: SearchResult[];
