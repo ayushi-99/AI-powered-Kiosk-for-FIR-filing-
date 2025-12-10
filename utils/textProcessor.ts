@@ -13,18 +13,23 @@ export const parseAndChunkText = (text: string): DocumentChunk[] => {
   let chunkCounter = 0;
   let currentContent = '';
 
-  // Heuristic Regex for Legal Texts (BNS/IPC)
   // Matches:
-  // "Section 10."
-  // "10. Defamation"
+  // "1. Short title..."
+  // "303. Theft."
   // "CHAPTER IV"
-  const sectionRegex = /^(?:Section\s+\d+|[0-9]+\.\s+[A-Z]|CHAPTER\s+[IVXLCDM]+)/;
+  const sectionRegex = /^(?:CHAPTER\s+[IVXLCDM]+|\d+\.)/;
+  
+  // Regex to identify garbage lines from PDF copy-paste (e.g., "S__ec___ . __ 1 __ ]" or page headers)
+  const garbageRegex = /_{3,}|\[Part II—|THE GAZETTE OF INDIA|EXTRAORDINARY/;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    // Check if line looks like a header
+    // Skip garbage lines
+    if (garbageRegex.test(line)) continue;
+
+    // Check if line looks like a header (Section or Chapter)
     if (sectionRegex.test(line)) {
       // If we have accumulated content, push the previous chunk
       if (currentContent.length > 0) {
@@ -38,7 +43,8 @@ export const parseAndChunkText = (text: string): DocumentChunk[] => {
       }
 
       // Start new chunk
-      // We use the full line as the title, e.g., "302. Murder."
+      // Use the line as title. If it's just a number like "303.", we might want to grab the next line too, 
+      // but usually the title is on the same line or valid enough.
       currentChunk = {
         title: line, 
         metadata: { startIndex: i, endIndex: i }
