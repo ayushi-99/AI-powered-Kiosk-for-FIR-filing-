@@ -25,6 +25,10 @@ export interface LegalAnalysisResult {
   confidence_score: number;
   reasoning: string;
   missing_details: string;
+  detected_language?: string;
+  translated_narrative?: string;
+  transcription?: string;
+  visual_analysis?: string;
 }
 
 export interface RAGResponse {
@@ -38,4 +42,19 @@ export enum AppState {
   INDEXING = 'INDEXING',
   READY = 'READY',
   SEARCHING = 'SEARCHING',
+}
+
+// Red Team Types
+export interface TestCase {
+  id: string;
+  narrative: string;
+  expected_classification: 'Cognizable Offense' | 'Non-Cognizable/Civil Dispute' | 'Ambiguous/Need More Info';
+  type: 'Genuine' | 'Civil' | 'Frivolous' | 'Vague';
+}
+
+export interface TestResult extends TestCase {
+  actual_classification: string;
+  bns_section_found: string;
+  pass: boolean;
+  reasoning: string;
 }
